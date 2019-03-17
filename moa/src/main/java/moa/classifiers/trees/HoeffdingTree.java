@@ -33,6 +33,7 @@ import moa.AbstractMOAObject;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.MultiClassClassifier;
 import moa.classifiers.bayes.NaiveBayes;
+import moa.classifiers.bayes.iFNB;
 import moa.classifiers.core.AttributeSplitSuggestion;
 import moa.classifiers.core.attributeclassobservers.AttributeClassObserver;
 import moa.classifiers.core.attributeclassobservers.DiscreteAttributeClassObserver;
@@ -835,10 +836,10 @@ public FlagOption binarySplitsOption = new FlagOption("binarySplits", 'b',
 
     public MultiChoiceOption leafpredictionOption = new MultiChoiceOption(
             "leafprediction", 'l', "Leaf prediction to use.", new String[]{
-                "MC", "NB", "NBAdaptive"}, new String[]{
+                "MC", "NB", "NBAdaptive", "iFNB"}, new String[]{
                 "Majority class",
                 "Naive Bayes",
-                "Naive Bayes Adaptive"}, 2);
+                "Naive Bayes Adaptive", "iFNB"}, 2);
 
     public IntOption nbThresholdOption = new IntOption(
             "nbThreshold",
@@ -916,9 +917,26 @@ public FlagOption binarySplitsOption = new FlagOption("binarySplits", 'b',
             ret = new ActiveLearningNode(initialClassObservations);
         } else if (predictionOption == 1) { //NB
             ret = new LearningNodeNB(initialClassObservations);
-        } else { //NBAdaptive
+        } else if (predictionOption == 2) { //NBAdaptive
             ret = new LearningNodeNBAdaptive(initialClassObservations);
+        } else { //iFNB
+            ret = new LearningNodeiFNB(initialClassObservations);
         }
         return ret;
+    }
+
+    public static class LearningNodeiFNB extends ActiveLearningNode {
+
+        private static final long serialVersionUID = 1L;
+
+        public LearningNodeiFNB(double[] initialClassObservations){
+            super(initialClassObservations);
+        }
+
+        @Override
+        public double[] getClassVotes(Instance inst, HoeffdingTree ht)
+        {
+            return iFNB.doNaiveBayesPrediction(inst, this.observedClassDistribution, this.attributeObservers);
+        }
     }
 }
